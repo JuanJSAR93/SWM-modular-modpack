@@ -36,10 +36,12 @@ def swm_updatePokedex(examinedSpecies)
   for itm in line
     species = itm[:species]
     form = itm[:form]
+    dexEntry = $Trainer.pokedex.dexList[species]
+
     if form.nil?
-      newEntries.push(getMonName(species)) if !$Trainer.pokedex.dexList[species][:owned?]
+      newEntries.push(getMonName(species)) if !dexEntry[:owned?]
     else
-      if !$Trainer.pokedex.dexList[species][:formsOwned][form]
+      if !dexEntry[:formsOwned][form]
         mon_name =
           form == 0 \
             ? getMonName(species, form)
@@ -50,10 +52,22 @@ def swm_updatePokedex(examinedSpecies)
             )
         newEntries.push(mon_name)
       end
-      $Trainer.pokedex.dexList[species][:formsOwned][form] = true
+      dexEntry[:formsOwned][form] = true
     end
-    $Trainer.pokedex.dexList[species][:seen?] = true
-    $Trainer.pokedex.dexList[species][:owned?] = true
+
+    # Marcar visto/poseído
+    dexEntry[:seen?]  = true
+    dexEntry[:owned?] = true
+
+    # Mejoras estilo Rejuv
+    dexEntry[:shadowCaught?] = true if dexEntry.key?(:shadowCaught?)
+    dexEntry[:shinySeen?]    = true if dexEntry.key?(:shinySeen?)
+
+    if dexEntry.key?(:forms)
+      dexEntry[:forms].each_key do |form_name|
+        dexEntry[:forms][form_name] = true
+      end
+    end
   end
   return newEntries.uniq # Remove duplicates
 end
